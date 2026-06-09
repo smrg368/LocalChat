@@ -1,8 +1,6 @@
 import os
 from openai import OpenAI
 
-# LM Studioのローカルサーバーに接続するためのクライアント初期化
-# APIキーは不要ですが、ライブラリの仕様上ダミーの文字列を入れておきます
 client = OpenAI(
     base_url="http://localhost:1234/v1",
     api_key="lm-studio"
@@ -10,11 +8,6 @@ client = OpenAI(
 
 def main():
     print("=== ローカルLLM チャットシステム（終了するには 'quit' と入力） ===")
-    
-    # 会話履歴を保持するリスト（システムプロンプトでキャラクター設定などを指定可能）
-    messages = [
-        {"role": "system", "content": "あなたは簡潔かつ正確に答える優秀なアシスタントです。"}
-    ]
     
     while True:
         user_input = input("\nあなた: ")
@@ -24,24 +17,25 @@ def main():
         if not user_input.strip():
             continue
             
-        # ユーザーの入力を履歴に追加
-        messages.append({"role": "user", "content": user_input})
-        
         try:
-            # LM Studioにリクエストを送信
-            # model引数はLM Studio側で現在ロードされているモデルが自動で適用されます
-            response = client.chat.completions.create(
-                model="local-model", 
-                messages=messages,
-                temperature=0.7
+            # 変更点: chat.completions ではなく、Qiitaの記事と同じ responses を使用
+            # 引数の messages も、最新の「model」「input」というシンプルな形式に合わせます
+            stream = client.responses.create(
+                model="local-model",
+                input=user_input,
+                stream=True
             )
             
-            # 応答の取得と表示
-            answer = response.choices[0].message.content
-            print(f"\nAI: {answer}")
+            print("\nAI: ", end="", flush=True)
             
-            # AIの応答も履歴に追加して会話を継続させる
-            messages.append({"role": "assistant", "content": answer})
+            # 変更点: 届くイベントの型に合わせて、テキストの断片（delta）を取り出す
+            for event in stream:
+                # Qiitaの `event.type === "response.output_text.delta"` と同じ判定
+                if event.type == "response.output_text.delta":
+                    if event.delta:
+                        print(event.delta, end="", flush=True)
+            
+            print() # 最後に改行
             
         except Exception as e:
             print(f"\nエラーが発生しました: {e}")
