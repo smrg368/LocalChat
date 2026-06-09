@@ -1,0 +1,20 @@
+# Pythonが自動生成するキャッシュファイル（コンパイル済みデータ）
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 仮想環境（.venv）フォルダをまるごと除外
+.venv/
+venv/
+ENV/
+
+# VSCodeの設定フォルダ（共有したくない場合）
+.vscode/
+
+# 環境変数などを書き込む設定ファイル（将来的にAPIキーなどを隠す用）
+.env
+.env.local
+
+# OSが自動生成する一時ファイル
+.DS_Store
+Thumbs.db
